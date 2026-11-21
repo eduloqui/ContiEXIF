@@ -23,8 +23,8 @@ ContiExif lets you scan photo directories, index image metadata into a local dat
 ## Download & Installation
 
 ### Option 1: Pre-built Binary (Recommended)
-1. Go to the [Releases](https://github.com/YOUR_USERNAME/ContiExif/releases) page.
-2. Download the latest `ContiExif-vX.X.X-win-x64.zip`.
+1. Go to the [Releases](https://github.com/eduloqui/ContiExif/releases) page.
+2. Download the latest `ContiExif-v1.5.1-win-x64.zip`.
 3. Extract the ZIP archive anywhere on your PC.
 4. Run `ContiExif.exe`.
 
@@ -43,7 +43,7 @@ ContiExif lets you scan photo directories, index image metadata into a local dat
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/ContiExif.git
+   git clone https://github.com/eduloqui/ContiExif.git
    cd ContiExif
    ```
 
