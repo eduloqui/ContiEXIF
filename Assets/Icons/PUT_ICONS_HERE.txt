@@ -1,0 +1,4 @@
+Icons, one per filter, named exactly:
+camera, lens, focal, aperture, shutter, iso, year, month, day, hour
+Format: .svg (preferred) or .png, e.g. Assets\Icons\camera.svg
+SVG icons keep their own colors (they are not tinted by the theme): use a color that reads on light and dark, e.g. #00BBCC or mid-gray.

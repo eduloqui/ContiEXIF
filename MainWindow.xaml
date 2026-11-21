@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ContiExif.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:ContiExif.Models"
+    xmlns:views="using:ContiExif.Views">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="Root" RowDefinitions="40,*,Auto">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="Escape" Invoked="Esc_Invoked" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid.Resources>
+            <Style x:Key="CompactItem" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                <Setter Property="MinHeight" Value="30" />
+                <Setter Property="Padding" Value="8,0,4,0" />
+            </Style>
+            <Style x:Key="TileContainer" TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
+                <Setter Property="Margin" Value="4" />
+                <Setter Property="Padding" Value="0" />
+            </Style>
+
+            <DataTemplate x:Key="OptionTemplate" x:DataType="models:FilterOption">
+                <Grid ColumnDefinitions="*,Auto" Background="Transparent"
+                      Opacity="{x:Bind RowOpacity, Mode=OneWay}"
+                      RightTapped="Option_RightTapped">
+                    <CheckBox Content="{x:Bind Label}" MinWidth="0" MinHeight="28"
+                              FontWeight="{x:Bind LabelWeight}"
+                              IsChecked="{x:Bind IsSelected, Mode=OneWay}"
+                              Click="{x:Bind OnClick}" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind CountText, Mode=OneWay}" VerticalAlignment="Center"
+                               Margin="8,0,4,0" FontSize="12"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
+            </DataTemplate>
+        </Grid.Resources>
+
+        <!-- Title bar -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0">
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="14,0,0,0" VerticalAlignment="Center">
+                <Border Width="10" Height="10" CornerRadius="3" Background="{StaticResource ContiAccentBrush}" />
+                <TextBlock x:Name="TitleText" Text="ContiExif" FontSize="12" FontWeight="SemiBold" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Main area -->
+        <Grid Grid.Row="1" ColumnDefinitions="300,*">
+
+            <!-- Sidebar -->
+            <Grid Grid.Column="0" Padding="12,0,0,12" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,0,12,0"
+                      ToolTipService.ToolTip="{x:Bind ViewModel.FolderText, Mode=OneWay}">
+                    <FontIcon Glyph="&#xE838;" FontSize="16" VerticalAlignment="Top" Margin="0,2,0,0"
+                              Foreground="{StaticResource ContiAccentBrush}" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.FolderText, Mode=OneWay}"
+                               TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis"
+                               FontWeight="SemiBold" />
+                </Grid>
+
+                <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
+                      ColumnSpacing="8" RowSpacing="8" Margin="0,0,12,0">
+                    <Button Content="Scan Folder" HorizontalAlignment="Stretch" Click="ScanFolder_Click"
+                            Style="{StaticResource AccentButtonStyle}"
+                            IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}" />
+                    <Button Grid.Column="1" Content="Rescan" HorizontalAlignment="Stretch" Click="Rescan_Click"
+                            IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}" />
+                    <Button Grid.Row="1" Grid.ColumnSpan="2" Content="Reset filters" HorizontalAlignment="Stretch"
+                            Click="ResetFilters_Click" IsEnabled="{x:Bind ViewModel.CanReset, Mode=OneWay}" />
+                </Grid>
+
+                <TextBox x:Name="SearchBox" Grid.Row="2" Margin="0,0,12,0"
+                         PlaceholderText="Search name, folder, camera, lens, tags…"
+                         TextChanged="Search_TextChanged" />
+
+                <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Groups}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:FilterGroup">
+                                <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                          Margin="0,0,12,4" Padding="4"
+                                          IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}">
+                                    <Expander.Header>
+                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+                                            <Image Width="16" Height="16" Source="{x:Bind IconSource}"
+                                                   Visibility="{x:Bind IconVis}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{x:Bind HeaderText, Mode=OneWay}"
+                                                       VerticalAlignment="Center" />
+                                            <ToggleButton Grid.Column="2" Content="↔" Padding="6,0" MinHeight="24" MinWidth="30"
+                                                          FontSize="12" ToolTipService.ToolTip="Range slider"
+                                                          Visibility="{x:Bind RangeToggleVis}"
+                                                          IsChecked="{x:Bind IsRange, Mode=OneWay}"
+                                                          Click="{x:Bind OnRangeToggle}" />
+                                            <Ellipse Grid.Column="3" Width="8" Height="8" Margin="0,0,8,0"
+                                                     Fill="{StaticResource ContiAccentBrush}"
+                                                     Visibility="{x:Bind ActiveVis, Mode=OneWay}" />
+                                        </Grid>
+                                    </Expander.Header>
+                                    <Grid>
+                                        <ListView ItemsSource="{x:Bind Options}" SelectionMode="None"
+                                                  MaxHeight="240" ItemContainerStyle="{StaticResource CompactItem}"
+                                                  ItemTemplate="{StaticResource OptionTemplate}"
+                                                  Visibility="{x:Bind ListVis, Mode=OneWay}" />
+                                        <views:RangeSlider Margin="8,4" Visibility="{x:Bind RangeVis, Mode=OneWay}" />
+                                    </Grid>
+                                </Expander>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Viewport -->
+            <Border Grid.Column="1" Margin="0,0,12,12" CornerRadius="8" BorderThickness="1"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+                    <Grid Padding="12,10" ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
+                        <TextBlock Text="Sort by" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" MinWidth="150" ItemsSource="{x:Bind ViewModel.SortItems}"
+                                  SelectedIndex="{x:Bind ViewModel.SortIndex, Mode=TwoWay}" />
+                        <Button Grid.Column="2" MinWidth="130" Click="SortDir_Click"
+                                Content="{x:Bind ViewModel.SortDirText, Mode=OneWay}" />
+                        <ToggleButton Grid.Column="3" HorizontalAlignment="Right" Click="EditToggle_Click"
+                                      IsChecked="{x:Bind ViewModel.EditMode, Mode=OneWay}"
+                                      IsEnabled="{x:Bind ViewModel.IsNotBusy, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE70F;" FontSize="14" />
+                                <TextBlock Text="Edit" />
+                            </StackPanel>
+                        </ToggleButton>
+                        <TextBlock Grid.Column="4" Text="Per page" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="5" MinWidth="80" ItemsSource="{x:Bind ViewModel.PageSizeItems}"
+                                  SelectedIndex="{x:Bind ViewModel.PageSizeIndex, Mode=TwoWay}" />
+                    </Grid>
+
+                    <!-- Edit panel -->
+                    <Border x:Name="EditPanel" Grid.Row="1" Margin="12,0,12,8" Padding="12" CornerRadius="6"
+                            BorderThickness="1" BorderBrush="{StaticResource ContiAccentBrush}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            Visibility="{x:Bind ViewModel.EditVisibility, Mode=OneWay}">
+                        <StackPanel Spacing="10">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <AutoSuggestBox x:Name="CameraBox" Header="Camera" Width="230" PlaceholderText="Unchanged"
+                                                TextChanged="AutoBox_TextChanged" SuggestionChosen="AutoBox_SuggestionChosen" />
+                                <AutoSuggestBox x:Name="LensBox" Header="Lens" Width="260" PlaceholderText="Unchanged"
+                                                TextChanged="AutoBox_TextChanged" SuggestionChosen="AutoBox_SuggestionChosen" />
+                                <NumberBox x:Name="FocalBox" Header="Focal length (mm)" Width="150" PlaceholderText="Unchanged"
+                                           Value="NaN" Minimum="1" Maximum="2000" SmallChange="1"
+                                           SpinButtonPlacementMode="Compact" />
+                                <NumberBox x:Name="ApertureBox" Header="Aperture (f/)" Width="130" PlaceholderText="Unchanged"
+                                           Value="NaN" Minimum="0.7" Maximum="64" SmallChange="0.1"
+                                           SpinButtonPlacementMode="Compact" />
+                                <NumberBox x:Name="ShiftBox" Header="Hour shift (e.g. +14)" Width="170"
+                                           Value="0" SmallChange="1" ValueChanged="ShiftBox_ValueChanged"
+                                           SpinButtonPlacementMode="Compact" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Bind ViewModel.EditPreview, Mode=OneWay}" TextWrapping="Wrap"
+                                       FontWeight="SemiBold" FontSize="13" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <TextBlock Text="{x:Bind ViewModel.EditInfo, Mode=OneWay}" TextWrapping="Wrap"
+                                           FontSize="12" VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                    <Button Content="Select page" Click="SelectPage_Click" />
+                                    <Button Content="Clear selection" Click="ClearSel_Click" />
+                                    <Button Content="{x:Bind ViewModel.SaveText, Mode=OneWay}"
+                                            Style="{StaticResource AccentButtonStyle}"
+                                            IsEnabled="{x:Bind ViewModel.SaveEnabled, Mode=OneWay}"
+                                            Click="Save_Click" />
+                                    <Button Content="Cancel" Click="EditCancel_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <GridView x:Name="PhotoGrid" Grid.Row="2" Padding="8"
+                              ItemsSource="{x:Bind ViewModel.Photos}"
+                              SelectionMode="Extended" IsItemClickEnabled="False"
+                              ItemContainerStyle="{StaticResource TileContainer}"
+                              ContainerContentChanging="Grid_ContainerContentChanging"
+                              SelectionChanged="Grid_SelectionChanged">
+                        <GridView.ItemTemplate>
+                            <DataTemplate x:DataType="models:PhotoItem">
+                                <Grid Width="240" Height="160" Background="#40808080" CanDrag="True"
+                                      Tapped="Tile_Tapped" DoubleTapped="Tile_DoubleTapped"
+                                      DragStarting="Tile_DragStarting">
+                                    <Image Source="{x:Bind Thumb, Mode=OneWay}" Stretch="UniformToFill" />
+                                    <Grid Opacity="{x:Bind SelectedOpacity, Mode=OneWay}" IsHitTestVisible="False">
+                                        <Border Background="{StaticResource ContiAccentTintBrush}" />
+                                        <Border BorderThickness="4" BorderBrush="{StaticResource ContiAccentBrush}" />
+                                        <Grid Width="26" Height="26" CornerRadius="13" Margin="8"
+                                              HorizontalAlignment="Right" VerticalAlignment="Top"
+                                              Background="{StaticResource ContiAccentBrush}">
+                                            <FontIcon Glyph="&#xE73E;" FontSize="14"
+                                                      Foreground="{StaticResource ContiOnAccentBrush}" />
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                    </GridView>
+
+                    <TextBlock Grid.Row="2" Text="No photos to show." HorizontalAlignment="Center"
+                               VerticalAlignment="Center" IsHitTestVisible="False"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{x:Bind ViewModel.EmptyVisibility, Mode=OneWay}" />
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center"
+                                Spacing="8" Padding="0,8,0,10">
+                        <Button Click="First_Click" IsEnabled="{x:Bind ViewModel.CanPrev, Mode=OneWay}">
+                            <FontIcon Glyph="&#xE892;" FontSize="12" />
+                        </Button>
+                        <Button Click="Prev_Click" IsEnabled="{x:Bind ViewModel.CanPrev, Mode=OneWay}">
+                            <FontIcon Glyph="&#xE76B;" FontSize="12" />
+                        </Button>
+                        <TextBlock Text="{x:Bind ViewModel.PageText, Mode=OneWay}" VerticalAlignment="Center"
+                                   MinWidth="110" TextAlignment="Center" />
+                        <Button Click="Next_Click" IsEnabled="{x:Bind ViewModel.CanNext, Mode=OneWay}">
+                            <FontIcon Glyph="&#xE76C;" FontSize="12" />
+                        </Button>
+                        <Button Click="Last_Click" IsEnabled="{x:Bind ViewModel.CanNext, Mode=OneWay}">
+                            <FontIcon Glyph="&#xE893;" FontSize="12" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Status bar -->
+        <Border Grid.Row="2" Padding="12,6" BorderThickness="0,1,0,0"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="24">
+                <TextBlock Text="{x:Bind ViewModel.StatusCounts, Mode=OneWay}" FontSize="12" />
+                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Message, Mode=OneWay}" FontSize="12"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                            Visibility="{x:Bind ViewModel.ThumbVisibility, Mode=OneWay}">
+                    <TextBlock Text="{x:Bind ViewModel.ThumbText, Mode=OneWay}" FontSize="12" VerticalAlignment="Center" />
+                    <Button Content="{x:Bind ViewModel.ThumbPauseText, Mode=OneWay}" Click="ThumbPause_Click"
+                            Padding="8,1" MinHeight="0" FontSize="12" />
+                </StackPanel>
+                <ProgressBar Grid.Column="3" Width="160" IsIndeterminate="True" VerticalAlignment="Center"
+                             Foreground="{StaticResource ContiAccentBrush}"
+                             Visibility="{x:Bind ViewModel.ProgressVisibility, Mode=OneWay}" />
+            </Grid>
+        </Border>
+
+        <Popup x:Name="DetailHost" Grid.RowSpan="3" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <views:DetailPopup x:Name="Detail" />
+        </Popup>
+    </Grid>
+</Window>

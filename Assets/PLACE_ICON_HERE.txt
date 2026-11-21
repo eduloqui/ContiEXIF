@@ -1,0 +1,1 @@
+Place ContiExif.ico in this folder (Assets\ContiExif.ico).
