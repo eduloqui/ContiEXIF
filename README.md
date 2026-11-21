@@ -6,7 +6,7 @@ ContiExif lets you scan photo directories, index image metadata into a local dat
 
 ---
 
-## ✨ Features
+## Features
 
 - **Blazing Fast Scanning & Indexing**: Scans image folders and indexes metadata into an embedded SQLite database.
 - **Deep EXIF Metadata Filtering**:
@@ -20,7 +20,7 @@ ContiExif lets you scan photo directories, index image metadata into a local dat
 
 ---
 
-## 📥 Download & Installation
+## Download & Installation
 
 ### Option 1: Pre-built Binary (Recommended)
 1. Go to the [Releases](https://github.com/YOUR_USERNAME/ContiExif/releases) page.
@@ -32,7 +32,7 @@ ContiExif lets you scan photo directories, index image metadata into a local dat
 
 ---
 
-## 🛠️ Building from Source
+## Building from Source
 
 ### Prerequisites
 - Windows 10 (version 19041+) or Windows 11
@@ -53,11 +53,7 @@ ContiExif lets you scan photo directories, index image metadata into a local dat
    ```
 
 3. **Build and publish self-contained binary**:
-   You can run the included batch script:
-   ```cmd
-   compile.bat
-   ```
-   Or manually run:
+   You can run:
    ```bash
    dotnet publish -c Release -p:Platform=x64 -r win-x64 -o publish
    ```
@@ -65,7 +61,7 @@ ContiExif lets you scan photo directories, index image metadata into a local dat
 
 ---
 
-## 📁 Data Storage
+## Data Storage
 
 All cached thumbnails, indexed metadata databases, and settings are stored locally in your user profile:
 ```
@@ -74,6 +70,6 @@ All cached thumbnails, indexed metadata databases, and settings are stored local
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **GNU General Public License v3.0** (GNU GPLv3). See the [LICENSE](LICENSE) file for the full license text.

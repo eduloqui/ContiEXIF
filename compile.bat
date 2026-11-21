@@ -1,1 +1,0 @@
-dotnet publish -c Release -p:Platform=x64 -r win-x64 -o publish
